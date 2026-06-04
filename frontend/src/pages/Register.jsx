@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import './Auth.css'; // Importing the style sheet
 
 function Register() {
   const [name, setName] = useState('');
@@ -37,29 +38,33 @@ function Register() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', textAlign: 'center' }}>
-      <h2>Register</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>Registered successfully! Redirecting to login...</p>}
-      
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '10px' }}>
-          <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <h2>Register</h2>
+        
+        {error && <div className="auth-error">{error}</div>}
+        {success && <div className="auth-success">Registered successfully! Redirecting to login...</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="auth-form-group">
+            <input type="text" className="auth-input" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="auth-form-group">
+            <input type="text" className="auth-input" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+          </div>
+          <div className="auth-form-group">
+            <input type="email" className="auth-input" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="auth-form-group">
+            <input type="password" className="auth-input" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          <button type="submit" className="auth-button">Sign Up</button>
+        </form>
+        
+        <div className="auth-footer">
+          Already have an account? <Link to="/login" className="auth-link">Login here</Link>
         </div>
-        <div style={{ marginBottom: '10px' }}>
-          <input type="text" placeholder="Username" value={username} onChange={(e) => username.target.value && setUsername(e.target.value)} required />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        <button type="submit">Sign Up</button>
-      </form>
-      <p>
-        Already have an account? <Link to="/login">Login here</Link>
-      </p>
+      </div>
     </div>
   );
 }
