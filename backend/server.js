@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const queries = require('./queries'); 
+const queries = require('./queries');
+const db = require('./db');
 
 const app = express();
 
@@ -12,11 +13,17 @@ app.use(express.json());
 // ==========================================
 app.get('/api/test', async (req, res) => {
     try {
+        console.log('🔍 Test endpoint called - attempting query');
         const [rows] = await db.query('SELECT 1 + 1 AS solution');
+        console.log('✓ Query successful:', rows);
         res.json({ message: 'MySQL connection works perfectly!', result: rows[0].solution });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Database connection error' });
+        console.error('❌ Database test error:', error.message, error.code);
+        res.status(500).json({
+            error: 'Database connection error',
+            details: error.message,
+            code: error.code
+        });
     }
 });
 
