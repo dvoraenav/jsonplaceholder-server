@@ -76,6 +76,11 @@ async function getAllTodos() {
     return todos;
 }
 
+async function getTodosByUserId(userId) {
+    const [todos] = await db.query('SELECT * FROM todos WHERE user_id = ? ORDER BY id', [userId]);
+    return todos;
+}
+
 async function getTodoById(id) {
     const [todos] = await db.query('SELECT * FROM todos WHERE id = ?', [id]);
     return todos.length > 0 ? todos[0] : null;
@@ -102,6 +107,11 @@ async function deleteTodo(id) {
 // ==========================================
 async function getAllPosts() {
     const [posts] = await db.query('SELECT * FROM posts');
+    return posts;
+}
+
+async function getPostsByUserId(userId) {
+    const [posts] = await db.query('SELECT * FROM posts WHERE user_id = ? ORDER BY id', [userId]);
     return posts;
 }
 
@@ -156,7 +166,7 @@ async function deleteComment(id) {
 module.exports = {
     verifyLogin, registerUser,
     getAllUsers, getUserById, createUser, updateUser, deleteUser,
-    getAllTodos, getTodoById, createTodo, updateTodo, deleteTodo,
-    getAllPosts, getPostById, createPost, updatePost, deletePost,
+    getAllTodos, getTodosByUserId, getTodoById, createTodo, updateTodo, deleteTodo,
+    getAllPosts, getPostsByUserId, getPostById, createPost, updatePost, deletePost,
     getAllComments, getCommentsByPostId, createComment, updateComment, deleteComment
 };

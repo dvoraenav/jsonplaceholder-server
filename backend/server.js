@@ -119,6 +119,15 @@ app.get('/api/todos', async (req, res) => {
     }
 });
 
+app.get('/api/users/:userId/todos', async (req, res) => {
+    try {
+        const todos = await queries.getTodosByUserId(req.params.userId);
+        res.json(todos);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching user todos' });
+    }
+});
+
 app.get('/api/todos/:id', async (req, res) => {
     try {
         const todo = await queries.getTodoById(req.params.id);
@@ -171,6 +180,15 @@ app.get('/api/posts', async (req, res) => {
         res.json(posts);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching posts' });
+    }
+});
+
+app.get('/api/users/:userId/posts', async (req, res) => {
+    try {
+        const posts = await queries.getPostsByUserId(req.params.userId);
+        res.json(posts);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching user posts' });
     }
 });
 
