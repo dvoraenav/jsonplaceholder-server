@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { TodoIcon, PlusIcon, CloseIcon, EditIcon, TrashIcon, EmptyIcon, CheckIcon } from '../components/Icons';
 import './Todos.css';
 
 function Todos({ currentUser }) {
@@ -12,17 +13,32 @@ function Todos({ currentUser }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [limitFilter, setLimitFilter] = useState('');
+
   useEffect(() => {
     fetchTodos();
-  }, [currentUser]);
+  }, [currentUser, searchQuery, statusFilter, limitFilter]);
 
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/todos`);
+      
+      // Build dynamic query parameters
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.append('q', searchQuery.trim());
+      if (statusFilter !== '') params.append('completed', statusFilter);
+      if (limitFilter !== '') params.append('limit', limitFilter);
+      
+      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/todos?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch todos');
       const data = await response.json();
-      setTodos(data);
+      
+      // Explicitly sort items by ID
+      const sortedTodos = data.sort((a, b) => a.id - b.id);
+      setTodos(sortedTodos);
       setError('');
     } catch (err) {
       setError('Failed to load todos');
@@ -51,7 +67,7 @@ function Todos({ currentUser }) {
       });
       if (!response.ok) throw new Error('Failed to create todo');
       const newTodo = await response.json();
-      setTodos([...todos, newTodo]);
+      setTodos([...todos, newTodo].sort((a, b) => a.id - b.id));
       setFormData({ title: '' });
       setShowForm(false);
       setSuccess('Todo added successfully!');
@@ -84,7 +100,7 @@ function Todos({ currentUser }) {
         t.id === editingId
           ? { ...t, title: formData.title, completed: formData.completed }
           : t
-      ));
+      ).sort((a, b) => a.id - b.id));
       resetForm();
       setSuccess('Todo updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -107,7 +123,7 @@ function Todos({ currentUser }) {
       if (!response.ok) throw new Error('Failed to update todo');
       setTodos(todos.map(t =>
         t.id === todo.id ? { ...t, completed: !t.completed } : t
-      ));
+      ).sort((a, b) => a.id - b.id));
     } catch (err) {
       setError('Failed to toggle todo');
       console.error(err);
@@ -150,12 +166,27 @@ function Todos({ currentUser }) {
   return (
     <div className="todos-container">
       <div className="todos-header">
-        <div>
-          <h2>📋 My Todos</h2>
-          <p className="todos-subtitle">Manage your daily tasks</p>
+        <div className="header-title-wrapper">
+          <div className="header-icon-container">
+            <TodoIcon size={28} className="header-icon" />
+          </div>
+          <div>
+            <h2>My Todos</h2>
+            <p className="todos-subtitle">Manage your daily tasks</p>
+          </div>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary">
-          {showForm ? '✕ Cancel' : '+ New Todo'}
+        <button onClick={() => setShowForm(!showForm)} className={`btn-primary ${showForm ? 'btn-danger-type' : ''}`}>
+          {showForm ? (
+            <>
+              <CloseIcon size={16} />
+              <span>Cancel</span>
+            </>
+          ) : (
+            <>
+              <PlusIcon size={16} />
+              <span>New Todo</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -174,19 +205,21 @@ function Todos({ currentUser }) {
               autoFocus
             />
             {editingId && (
-              <label className="checkbox-label">
+              <label className="checkbox-label-custom">
                 <input
                   type="checkbox"
                   checked={formData.completed}
                   onChange={(e) => setFormData({ ...formData, completed: e.target.checked })}
+                  className="checkbox-input"
                 />
-                Completed
+                <span className="checkbox-text">Completed</span>
               </label>
             )}
           </div>
           <div className="form-actions">
             <button type="submit" className="btn-save">
-              {editingId ? '💾 Update' : '✓ Add'}
+              <CheckIcon size={16} />
+              <span>{editingId ? 'Update' : 'Add'}</span>
             </button>
             <button type="button" onClick={resetForm} className="btn-cancel">
               Cancel
@@ -195,8 +228,50 @@ function Todos({ currentUser }) {
         </form>
       )}
 
+      {/* Modern Search and Filters Widget Toolbar */}
+      <div className="filters-toolbar">
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Search tasks by title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="filter-input-search"
+          />
+        </div>
+        <div className="filter-selects">
+          <div className="select-wrapper">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Statuses</option>
+              <option value="true">Completed Only</option>
+              <option value="false">Pending Only</option>
+            </select>
+          </div>
+          <div className="select-wrapper">
+            <select
+              value={limitFilter}
+              onChange={(e) => setLimitFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Show All</option>
+              <option value="5">Limit 5</option>
+              <option value="10">Limit 10</option>
+              <option value="20">Limit 20</option>
+              <option value="50">Limit 50</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       {loading ? (
-        <div className="loading">Loading todos...</div>
+        <div className="loading">
+          <div className="spinner"></div>
+          <span>Loading todos...</span>
+        </div>
       ) : (
         <>
           <div className="progress-section">
@@ -211,21 +286,26 @@ function Todos({ currentUser }) {
 
           {todos.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">✨</div>
-              <h3>No todos yet</h3>
-              <p>Create your first todo to get started!</p>
+              <div className="empty-icon-container">
+                <EmptyIcon size={48} className="empty-icon-svg" />
+              </div>
+              <h3>No todos found</h3>
+              <p>Try adjusting your search filters or create a new todo!</p>
             </div>
           ) : (
             <div className="todos-list">
               {todos.map((todo) => (
                 <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
                   <div className="todo-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={todo.completed}
-                      onChange={() => handleToggleTodo(todo)}
-                      className="checkbox-input"
-                    />
+                    <label className="todo-checkbox-container">
+                      <input
+                        type="checkbox"
+                        checked={todo.completed}
+                        onChange={() => handleToggleTodo(todo)}
+                        className="checkbox-input"
+                      />
+                      <span className="checkbox-checkmark"></span>
+                    </label>
                   </div>
                   <div className="todo-content">
                     <span className="todo-id">#{todo.id}</span>
@@ -234,17 +314,17 @@ function Todos({ currentUser }) {
                   <div className="todo-actions">
                     <button
                       onClick={() => handleEditTodo(todo)}
-                      className="btn-small btn-edit"
+                      className="btn-action btn-edit"
                       title="Edit"
                     >
-                      ✎ Edit
+                      <EditIcon size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteTodo(todo.id)}
-                      className="btn-small btn-delete"
+                      className="btn-action btn-delete"
                       title="Delete"
                     >
-                      🗑 Delete
+                      <TrashIcon size={16} />
                     </button>
                   </div>
                 </div>

@@ -1,0 +1,484 @@
+/* Home.css */
+
+.dashboard-container {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 0 24px;
+  animation: dashboardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@keyframes dashboardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Welcome Banner Widget */
+.welcome-banner {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  border-radius: 20px;
+  padding: 40px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.welcome-content h1 {
+  color: white;
+  font-size: 36px;
+  font-weight: 800;
+  margin: 4px 0 12px 0;
+  letter-spacing: -0.03em;
+}
+
+.banner-greeting {
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.banner-status {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+.badge-pill {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(4px);
+}
+
+/* Metrics Row Widget Grid */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.metric-card {
+  background-color: var(--card-bg);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.metric-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.metric-icon-container {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-h);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.metric-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.metric-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg);
+  border-radius: 10px;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.metric-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+.metric-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 12px;
+  align-self: flex-start;
+  transition: color 0.2s ease;
+}
+
+.metric-link:hover {
+  color: var(--primary-hover);
+}
+
+/* Double Column Widget Panel */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.dashboard-widget-card {
+  background-color: var(--card-bg);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.widget-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-h);
+}
+
+.widget-header-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.widget-header-link:hover {
+  transform: translateX(2px);
+}
+
+.widget-body {
+  flex: 1;
+}
+
+/* Widget Empty State */
+.widget-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 12px;
+  text-align: center;
+}
+
+.widget-empty-icon {
+  color: var(--border-green);
+  margin-bottom: 12px;
+}
+
+.widget-empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.widget-empty-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.widget-empty-link:hover {
+  text-decoration: underline;
+}
+
+/* Widget Todo List */
+.widget-todos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.widget-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.widget-todo-item:hover {
+  border-color: var(--border-green);
+  transform: translateX(2px);
+}
+
+.widget-todo-title {
+  font-size: 14px;
+  color: var(--text-dark);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* Custom Checkbox Design (Mirroring Todos page) */
+.todo-checkbox-container {
+  display: block;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.todo-checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #ffffff;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.todo-checkbox-container:hover input ~ .checkbox-checkmark {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.todo-checkbox-container input:checked ~ .checkbox-checkmark {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.todo-checkbox-container input:checked ~ .checkbox-checkmark:after {
+  display: block;
+}
+
+.todo-checkbox-container .checkbox-checkmark:after {
+  left: 5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Widget Posts List */
+.widget-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.widget-post-item {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.widget-post-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.widget-post-title {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.widget-post-snippet {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.5;
+}
+
+/* Quick Actions Widget */
+.quick-actions-widget {
+  background-color: var(--card-bg);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-actions-title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-h);
+}
+
+.quick-actions-buttons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-action-btn {
+  flex: 1;
+  min-width: 200px;
+  background-color: var(--primary-light);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  color: var(--primary-hover);
+  text-decoration: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+  background-color: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+/* Loading & Spinner (Aligned with pages) */
+.loading-wrapper {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-light);
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3.5px solid rgba(16, 185, 129, 0.12);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0 16px;
+    margin: 16px auto;
+  }
+
+  .welcome-banner {
+    padding: 24px;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .welcome-content h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

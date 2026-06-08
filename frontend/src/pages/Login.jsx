@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { LogoIcon } from '../components/Icons';
 import './Auth.css'; // Importing the style sheet
 
 function Login({ setCurrentUser }) {
@@ -27,7 +28,7 @@ function Login({ setCurrentUser }) {
 
       localStorage.setItem('user', JSON.stringify(data.user));
       setCurrentUser(data.user);
-      navigate(`/users/${data.user.username}/todos`);
+      navigate('/');
     } catch (err) {
       setError(err.message);
     }
@@ -36,7 +37,10 @@ function Login({ setCurrentUser }) {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <h2>Login</h2>
+        <div className="auth-logo-container">
+          <LogoIcon size={36} className="auth-logo" />
+        </div>
+        <h2>Sign In</h2>
         
         {error && <div className="auth-error">{error}</div>}
         

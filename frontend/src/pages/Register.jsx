@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { LogoIcon } from '../components/Icons';
 import './Auth.css'; // Importing the style sheet
 
 function Register() {
@@ -40,7 +41,10 @@ function Register() {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <h2>Register</h2>
+        <div className="auth-logo-container">
+          <LogoIcon size={36} className="auth-logo" />
+        </div>
+        <h2>Create Account</h2>
         
         {error && <div className="auth-error">{error}</div>}
         {success && <div className="auth-success">Registered successfully! Redirecting to login...</div>}

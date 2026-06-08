@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Todos from './pages/Todos';
 import Posts from './pages/Posts';
+import Home from './pages/Home';
 import Navbar from './components/Navbar';
 
 function App() {
@@ -24,14 +25,19 @@ function App() {
         {/* Public Routes */}
         <Route
           path="/login"
-          element={!currentUser ? <Login setCurrentUser={setCurrentUser} /> : <Navigate to={`/users/${currentUser.username}/todos`} />}
+          element={!currentUser ? <Login setCurrentUser={setCurrentUser} /> : <Navigate to="/" />}
         />
         <Route
           path="/register"
-          element={!currentUser ? <Register /> : <Navigate to={`/users/${currentUser.username}/todos`} />}
+          element={!currentUser ? <Register /> : <Navigate to="/" />}
         />
 
         {/* Protected Routes */}
+        <Route
+          path="/"
+          element={currentUser ? <Home currentUser={currentUser} /> : <Navigate to="/login" />}
+        />
+
         <Route
           path="/users/:username/todos"
           element={currentUser ? <Todos currentUser={currentUser} /> : <Navigate to="/login" />}
@@ -43,7 +49,7 @@ function App() {
         />
 
         {/* Default Redirect */}
-        <Route path="*" element={<Navigate to={currentUser ? `/users/${currentUser.username}/todos` : "/login"} />} />
+        <Route path="*" element={<Navigate to={currentUser ? "/" : "/login"} />} />
       </Routes>
     </Router>
   );
