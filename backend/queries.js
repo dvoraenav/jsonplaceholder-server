@@ -58,9 +58,18 @@ async function createUser(name, username, email) {
     return { id: result.insertId, name, username, email };
 }
 
-async function updateUser(id, name, username, email) {
-    const [result] = await db.query('UPDATE users SET name = ?, username = ?, email = ? WHERE id = ?', [name, username, email, id]);
-    return result.affectedRows > 0;
+async function updateUser(id, name, username, email, password) {
+    // 1. Update personal details in the 'users' table
+    const userSql = 'UPDATE users SET name = ?, username = ?, email = ? WHERE id = ?';
+    const [userResult] = await db.query(userSql, [name, username, email, id]);
+
+    // 2. If a new password is provided, update the 'passwords' table
+    if (password && password.trim() !== '') {
+        const passSql = 'UPDATE passwords SET password_hash = ? WHERE user_id = ?';
+        await db.query(passSql, [password, id]);
+    }
+
+    return userResult.affectedRows > 0;
 }
 
 async function deleteUser(id) {
@@ -76,9 +85,33 @@ async function getAllTodos() {
     return todos;
 }
 
-async function getTodosByUserId(userId) {
-    const [todos] = await db.query('SELECT * FROM todos WHERE user_id = ? ORDER BY id', [userId]);
-    return todos;
+async function getTodosByUserId(userId, filters = {}) {
+    let sql = 'SELECT * FROM todos WHERE user_id = ?';
+    const params = [userId];
+
+    // 1. Filter by search query if provided
+    if (filters.q) {
+        sql += ' AND title LIKE ?';
+        params.push(`%${filters.q}%`);
+    }
+
+    // 2. Filter by completion status (Completed / Pending)
+    if (filters.completed !== undefined && filters.completed !== '') {
+        sql += ' AND completed = ?';
+        // MySQL stores booleans as 0 or 1, convert the 'true'/'false' string accordingly
+        params.push(filters.completed === 'true' ? 1 : 0);
+    }
+
+    sql += ' ORDER BY id ASC';
+
+    // 3. Limit the number of results if specified
+    if (filters.limit) {
+        sql += ' LIMIT ?';
+        params.push(parseInt(filters.limit));
+    }
+
+    const [rows] = await db.query(sql, params);
+    return rows;
 }
 
 async function getTodoById(id) {
@@ -110,9 +143,26 @@ async function getAllPosts() {
     return posts;
 }
 
-async function getPostsByUserId(userId) {
-    const [posts] = await db.query('SELECT * FROM posts WHERE user_id = ? ORDER BY id', [userId]);
-    return posts;
+async function getPostsByUserId(userId, filters = {}) {
+    let sql = 'SELECT * FROM posts WHERE user_id = ?';
+    const params = [userId];
+
+    // Filter ONLY by title to make the search sharp and responsive
+    if (filters.q) {
+        sql += ' AND title LIKE ?';
+        params.push(`%${filters.q}%`);
+    }
+
+    sql += ' ORDER BY id ASC';
+
+    // Limit the number of results if specified
+    if (filters.limit) {
+        sql += ' LIMIT ?';
+        params.push(parseInt(filters.limit));
+    }
+
+    const [rows] = await db.query(sql, params);
+    return rows;
 }
 
 async function getPostById(id) {
@@ -148,6 +198,11 @@ async function getCommentsByPostId(postId) {
     return comments;
 }
 
+async function getCommentById(id) {
+    const [rows] = await db.query('SELECT * FROM comments WHERE id = ?', [id]);
+    return rows.length > 0 ? rows[0] : null;
+}
+
 async function createComment(post_id, name, email, body) {
     const [result] = await db.query('INSERT INTO comments (post_id, name, email, body) VALUES (?, ?, ?, ?)', [post_id, name, email, body]);
     return { id: result.insertId, post_id, name, email, body };
@@ -163,10 +218,11 @@ async function deleteComment(id) {
     return result.affectedRows > 0;
 }
 
+
 module.exports = {
     verifyLogin, registerUser,
     getAllUsers, getUserById, createUser, updateUser, deleteUser,
     getAllTodos, getTodosByUserId, getTodoById, createTodo, updateTodo, deleteTodo,
     getAllPosts, getPostsByUserId, getPostById, createPost, updatePost, deletePost,
-    getAllComments, getCommentsByPostId, createComment, updateComment, deleteComment
+    getAllComments, getCommentsByPostId,getCommentById,createComment, updateComment, deleteComment,updateUser
 };

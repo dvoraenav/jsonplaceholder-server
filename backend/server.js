@@ -95,11 +95,15 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
     try {
-        const { name, username, email } = req.body;
-        const success = await queries.updateUser(req.params.id, name, username, email);
+        
+        const { name, username, email, password } = req.body;
+        
+        const success = await queries.updateUser(req.params.id, name, username, email, password);
+        
         if (!success) return res.status(404).json({ error: 'User not found' });
         res.json({ message: 'User updated successfully' });
     } catch (error) {
+        console.error("❌ שגיאה בעדכון משתמש:", error);
         res.status(500).json({ error: 'Error updating user' });
     }
 });
@@ -128,10 +132,13 @@ app.get('/api/todos', async (req, res) => {
 
 app.get('/api/users/:userId/todos', async (req, res) => {
     try {
+        
         const { q, completed, limit } = req.query;
+        
         const todos = await queries.getTodosByUserId(req.params.userId, { q, completed, limit });
         res.json(todos);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Error fetching user todos' });
     }
 });
@@ -193,11 +200,15 @@ app.get('/api/posts', async (req, res) => {
 
 app.get('/api/users/:userId/posts', async (req, res) => {
     try {
+        // Extract query parameters sent by React
         const { q, limit } = req.query;
+        
+        // Pass the filters object to the query function
         const posts = await queries.getPostsByUserId(req.params.userId, { q, limit });
         res.json(posts);
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching user posts' });
+        console.error("❌ Error fetching user posts:", error);
+        res.status(500).json({ error: 'Error fetching posts' });
     }
 });
 
@@ -253,7 +264,7 @@ app.put('/api/posts/:id', async (req, res) => {
 
 app.delete('/api/posts/:id', async (req, res) => {
     try {
-        const userId = req.body.userId || req.query.userId;
+        const userId = req.query?.userId || req.body?.userId;
         const post = await queries.getPostById(req.params.id);
         if (!post) return res.status(404).json({ error: 'Post not found' });
 
@@ -265,6 +276,7 @@ app.delete('/api/posts/:id', async (req, res) => {
         const success = await queries.deletePost(req.params.id);
         res.json({ message: 'Post deleted successfully' });
     } catch (error) {
+        console.error("❌ שגיאה במחיקת פוסט:", error);
         res.status(500).json({ error: 'Error deleting post' });
     }
 });
@@ -313,7 +325,7 @@ app.put('/api/comments/:id', async (req, res) => {
 
 app.delete('/api/comments/:id', async (req, res) => {
     try {
-        const requesterEmail = req.body.requesterEmail || req.query.requesterEmail;
+        const requesterEmail = req.query?.requesterEmail || req.body?.requesterEmail;
         const comment = await queries.getCommentById(req.params.id);
         if (!comment) return res.status(404).json({ error: 'Comment not found' });
 
@@ -325,6 +337,7 @@ app.delete('/api/comments/:id', async (req, res) => {
         const success = await queries.deleteComment(req.params.id);
         res.json({ message: 'Comment deleted successfully' });
     } catch (error) {
+        console.error("❌ השרת התרסק במחיקה בגלל:", error);
         res.status(500).json({ error: 'Error deleting comment' });
     }
 });

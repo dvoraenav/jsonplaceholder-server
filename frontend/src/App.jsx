@@ -20,7 +20,7 @@ function App() {
 
   return (
     <Router>
-      {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} />}
+      {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} setCurrentUser={setCurrentUser}/>}
       <Routes>
         {/* Public Routes */}
         <Route

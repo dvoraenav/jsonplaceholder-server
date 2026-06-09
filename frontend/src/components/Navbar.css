@@ -108,6 +108,15 @@
   align-items: center;
   gap: 8px;
   color: var(--text-dark);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.user-profile:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-hover);
 }
 
 .user-icon {
@@ -145,8 +154,205 @@
   transform: translateY(-1px);
 }
 
-.logout-button:active {
-  transform: translateY(0);
+/* ==========================================================================
+   FIXED PROFILE MODAL NEW STYLES (FORCED WHITE BOX)
+   ========================================================================== */
+
+.profile-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(15, 23, 42, 0.4) !important; /* Dims the background */
+  backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 9999 !important; /* Ensures it stays on top of everything */
+}
+
+.profile-modal-box {
+  background-color: #ffffff !important; /* Pure clean white background */
+  padding: 30px !important;
+  border-radius: 20px !important;
+  width: 90% !important;
+  max-width: 400px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(16, 185, 129, 0.1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  animation: modalViewUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.profile-modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding-bottom: 12px !important;
+}
+
+.profile-modal-header h3 {
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: var(--text-h) !important;
+}
+
+.profile-modal-close {
+  background: none !important;
+  border: none !important;
+  font-size: 24px !important;
+  cursor: pointer !important;
+  color: var(--text-light) !important;
+  transition: color 0.2s ease !important;
+  line-height: 1 !important;
+}
+
+.profile-modal-close:hover {
+  color: var(--danger) !important;
+}
+
+.profile-modal-avatar {
+  width: 64px !important;
+  height: 64px !important;
+  background-color: var(--primary) !important;
+  color: white !important;
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  margin: 0 auto !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.profile-modal-info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+.profile-info-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.profile-info-field label {
+  font-size: 11px !important;
+  color: var(--text-light) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.profile-info-field p {
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: var(--text-dark) !important;
+  font-weight: 600 !important;
+  background: var(--bg) !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+}
+/* Styling for inputs when in edit mode */
+.modal-input-field {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.modal-input-field:focus {
+  border-color: var(--primary);
+}
+
+/* Modal Alerts messages */
+.modal-alert {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.modal-alert-success {
+  background-color: var(--primary-light);
+  color: var(--primary-hover);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.modal-alert-error {
+  background-color: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Modal Buttons footer container */
+.modal-action-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.modal-btn-edit, .modal-btn-save {
+  flex: 1;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.modal-btn-edit:hover, .modal-btn-save:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.modal-btn-cancel {
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-btn-cancel:hover {
+  background-color: var(--bg);
+  color: var(--text-dark);
+}
+
+@keyframes modalViewUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 768px) {
@@ -159,18 +365,15 @@
     flex-direction: column;
     gap: 12px;
   }
-
   .navbar-menu {
     width: 100%;
     flex-direction: column;
     gap: 12px;
   }
-
   .nav-links {
     width: 100%;
     justify-content: center;
   }
-
   .navbar-user {
     border-left: none;
     border-top: 1px solid var(--border);
