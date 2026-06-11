@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const queries = require('./queries'); 
+const queries = require('./queries');
+const db = require('./db');
 
 const app = express();
 
@@ -12,11 +13,17 @@ app.use(express.json());
 // ==========================================
 app.get('/api/test', async (req, res) => {
     try {
+        console.log('🔍 Test endpoint called - attempting query');
         const [rows] = await db.query('SELECT 1 + 1 AS solution');
+        console.log('✓ Query successful:', rows);
         res.json({ message: 'MySQL connection works perfectly!', result: rows[0].solution });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Database connection error' });
+        console.error('❌ Database test error:', error.message, error.code);
+        res.status(500).json({
+            error: 'Database connection error',
+            details: error.message,
+            code: error.code
+        });
     }
 });
 
@@ -108,6 +115,135 @@ app.delete('/api/users/:id', async (req, res) => {
 });
 
 // ==========================================
+// Albums Routes
+// ==========================================
+app.get('/api/users/:userId/albums', async (req, res) => {
+    try {
+        const albums = await queries.getAlbumsByUserId(req.params.userId);
+        res.json(albums);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error fetching user albums' });
+    }
+});
+
+app.post('/api/albums', async (req, res) => {
+    try {
+        const { user_id, title } = req.body;
+        if (!user_id || !title) return res.status(400).json({ error: 'Missing fields' });
+
+        const newAlbum = await queries.createAlbum(user_id, title);
+        res.status(201).json(newAlbum);
+    } catch (error) {
+        res.status(500).json({ error: 'Error creating album' });
+    }
+});
+
+app.put('/api/albums/:id', async (req, res) => {
+    try {
+        const { title, userId } = req.body;
+        const album = await queries.getAlbumById(req.params.id);
+        if (!album) return res.status(404).json({ error: 'Album not found' });
+
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Album does not belong to active user' });
+        }
+
+        const success = await queries.updateAlbum(req.params.id, title);
+        if (!success) return res.status(404).json({ error: 'Album not found' });
+        res.json({ message: 'Album updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error updating album' });
+    }
+});
+
+app.delete('/api/albums/:id', async (req, res) => {
+    try {
+        const userId = req.body?.userId || req.query?.userId;
+        const album = await queries.getAlbumById(req.params.id);
+        if (!album) return res.status(404).json({ error: 'Album not found' });
+
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Album does not belong to active user' });
+        }
+
+        const success = await queries.deleteAlbum(req.params.id);
+        if (!success) return res.status(404).json({ error: 'Album not found' });
+        res.json({ message: 'Album deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting album' });
+    }
+});
+
+// ==========================================
+// Photos Routes
+// ==========================================
+app.get('/api/albums/:albumId/photos', async (req, res) => {
+    try {
+        const photos = await queries.getPhotosByAlbumId(req.params.albumId);
+        res.json(photos);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching album photos' });
+    }
+});
+
+app.post('/api/photos', async (req, res) => {
+    try {
+        const { album_id, title, url, thumbnailUrl, userId } = req.body;
+        if (!album_id || !title || !url) return res.status(400).json({ error: 'Missing fields' });
+
+        const album = await queries.getAlbumById(album_id);
+        if (!album) return res.status(404).json({ error: 'Album not found' });
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Photo does not belong to active user' });
+        }
+
+        const newPhoto = await queries.createPhoto(album_id, title, url, thumbnailUrl);
+        res.status(201).json(newPhoto);
+    } catch (error) {
+        res.status(500).json({ error: 'Error creating photo' });
+    }
+});
+
+app.put('/api/photos/:id', async (req, res) => {
+    try {
+        const { title, url, thumbnailUrl, userId } = req.body;
+        const photo = await queries.getPhotoById(req.params.id);
+        if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+        const album = await queries.getAlbumById(photo.album_id);
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Photo does not belong to active user' });
+        }
+
+        const success = await queries.updatePhoto(req.params.id, title, url, thumbnailUrl);
+        if (!success) return res.status(404).json({ error: 'Photo not found' });
+        res.json({ message: 'Photo updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error updating photo' });
+    }
+});
+
+app.delete('/api/photos/:id', async (req, res) => {
+    try {
+        const userId = req.body?.userId || req.query?.userId;
+        const photo = await queries.getPhotoById(req.params.id);
+        if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+        const album = await queries.getAlbumById(photo.album_id);
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Photo does not belong to active user' });
+        }
+
+        const success = await queries.deletePhoto(req.params.id);
+        if (!success) return res.status(404).json({ error: 'Photo not found' });
+        res.json({ message: 'Photo deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting photo' });
+    }
+});
+
+// ==========================================
 // Todos Routes
 // ==========================================
 app.get('/api/todos', async (req, res) => {
@@ -116,6 +252,16 @@ app.get('/api/todos', async (req, res) => {
         res.json(todos);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching todos' });
+    }
+});
+
+app.get('/api/users/:userId/todos', async (req, res) => {
+    try {
+        const { q, completed, limit } = req.query;
+        const todos = await queries.getTodosByUserId(req.params.userId, { q, completed, limit });
+        res.json(todos);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching user todos' });
     }
 });
 
@@ -174,6 +320,16 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
+app.get('/api/users/:userId/posts', async (req, res) => {
+    try {
+        const { q, limit } = req.query;
+        const posts = await queries.getPostsByUserId(req.params.userId, { q, limit });
+        res.json(posts);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching user posts' });
+    }
+});
+
 app.get('/api/posts/:id', async (req, res) => {
     try {
         const post = await queries.getPostById(req.params.id);
@@ -186,7 +342,8 @@ app.get('/api/posts/:id', async (req, res) => {
 
 app.get('/api/posts/:id/comments', async (req, res) => {
     try {
-        const comments = await queries.getCommentsByPostId(req.params.id);
+        const { limit } = req.query;
+        const comments = await queries.getCommentsByPostId(req.params.id, { limit });
         res.json(comments);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching comments for this post' });
@@ -207,9 +364,16 @@ app.post('/api/posts', async (req, res) => {
 
 app.put('/api/posts/:id', async (req, res) => {
     try {
-        const { title, body } = req.body;
+        const { title, body, userId } = req.body;
+        const post = await queries.getPostById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        
+        // Ownership Validation
+        if (userId && post.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Post does not belong to active user' });
+        }
+
         const success = await queries.updatePost(req.params.id, title, body);
-        if (!success) return res.status(404).json({ error: 'Post not found' });
         res.json({ message: 'Post updated successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Error updating post' });
@@ -218,8 +382,16 @@ app.put('/api/posts/:id', async (req, res) => {
 
 app.delete('/api/posts/:id', async (req, res) => {
     try {
+        const userId = req.body.userId || req.query.userId;
+        const post = await queries.getPostById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+
+        // Ownership Validation
+        if (userId && post.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Post does not belong to active user' });
+        }
+
         const success = await queries.deletePost(req.params.id);
-        if (!success) return res.status(404).json({ error: 'Post not found' });
         res.json({ message: 'Post deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Error deleting post' });
@@ -252,9 +424,16 @@ app.post('/api/comments', async (req, res) => {
 
 app.put('/api/comments/:id', async (req, res) => {
     try {
-        const { name, email, body } = req.body;
+        const { name, email, body, requesterEmail } = req.body;
+        const comment = await queries.getCommentById(req.params.id);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        // Ownership Validation
+        if (requesterEmail && comment.email !== requesterEmail) {
+            return res.status(403).json({ error: 'Unauthorized: Comment does not belong to active user' });
+        }
+
         const success = await queries.updateComment(req.params.id, name, email, body);
-        if (!success) return res.status(404).json({ error: 'Comment not found' });
         res.json({ message: 'Comment updated successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Error updating comment' });
@@ -263,8 +442,16 @@ app.put('/api/comments/:id', async (req, res) => {
 
 app.delete('/api/comments/:id', async (req, res) => {
     try {
+        const requesterEmail = req.body.requesterEmail || req.query.requesterEmail;
+        const comment = await queries.getCommentById(req.params.id);
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        // Ownership Validation
+        if (requesterEmail && comment.email !== requesterEmail) {
+            return res.status(403).json({ error: 'Unauthorized: Comment does not belong to active user' });
+        }
+
         const success = await queries.deleteComment(req.params.id);
-        if (!success) return res.status(404).json({ error: 'Comment not found' });
         res.json({ message: 'Comment deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Error deleting comment' });

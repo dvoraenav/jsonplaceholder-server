@@ -53,7 +53,7 @@ async function seedDatabase() {
             }
         }
 
-        console.log('✅ Database successfully seeded with 10 users, and expanded posts & comments!');
+        console.log('✅ Database successfully seeded with users, posts, todos, and comments!');
         process.exit(0);
     } catch (error) {
         console.error('❌ Error during seeding:', error);

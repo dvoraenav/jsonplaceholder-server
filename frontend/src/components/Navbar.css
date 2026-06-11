@@ -164,16 +164,19 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background-color: rgba(15, 23, 42, 0.4) !important; /* Dims the background */
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  /* Dims the background */
   backdrop-filter: blur(4px) !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  z-index: 9999 !important; /* Ensures it stays on top of everything */
+  z-index: 9999 !important;
+  /* Ensures it stays on top of everything */
 }
 
 .profile-modal-box {
-  background-color: #ffffff !important; /* Pure clean white background */
+  background-color: #ffffff !important;
+  /* Pure clean white background */
   padding: 30px !important;
   border-radius: 20px !important;
   width: 90% !important;
@@ -260,6 +263,7 @@
   border-radius: 10px !important;
   border: 1px solid var(--border) !important;
 }
+
 /* Styling for inputs when in edit mode */
 .modal-input-field {
   width: 100%;
@@ -308,7 +312,8 @@
   margin-top: 10px;
 }
 
-.modal-btn-edit, .modal-btn-save {
+.modal-btn-edit,
+.modal-btn-save {
   flex: 1;
   background-color: var(--primary);
   color: white;
@@ -322,7 +327,8 @@
   text-align: center;
 }
 
-.modal-btn-edit:hover, .modal-btn-save:hover {
+.modal-btn-edit:hover,
+.modal-btn-save:hover {
   background-color: var(--primary-hover);
   transform: translateY(-1px);
 }
@@ -349,6 +355,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -365,15 +372,18 @@
     flex-direction: column;
     gap: 12px;
   }
+
   .navbar-menu {
     width: 100%;
     flex-direction: column;
     gap: 12px;
   }
+
   .nav-links {
     width: 100%;
     justify-content: center;
   }
+
   .navbar-user {
     border-left: none;
     border-top: 1px solid var(--border);

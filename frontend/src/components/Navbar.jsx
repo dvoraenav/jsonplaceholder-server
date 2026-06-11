@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogoIcon, TodoIcon, PostIcon, UserIcon, LogoutIcon } from './Icons';
+import { LogoIcon, TodoIcon, PostIcon, AlbumIcon, UserIcon, LogoutIcon } from './Icons';
 import './Navbar.css';
 
 // Added setCurrentUser to the props destructuring to update header layout live
+
 function Navbar({ currentUser, onLogout, setCurrentUser }) {
   const navigate = useNavigate();
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -96,6 +97,10 @@ function Navbar({ currentUser, onLogout, setCurrentUser }) {
                 <Link to={`/users/${currentUser.username}/posts`} className="nav-link">
                   <PostIcon size={18} className="nav-icon" />
                   <span>Posts</span>
+                </Link>
+                <Link to={`/users/${currentUser.username}/albums`} className="nav-link">
+                  <AlbumIcon size={18} className="nav-icon" />
+                  <span>Albums</span>
                 </Link>
               </div>
               <div className="navbar-user">

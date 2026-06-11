@@ -59,11 +59,9 @@ async function createUser(name, username, email) {
 }
 
 async function updateUser(id, name, username, email, password) {
-    // 1. Update personal details in the 'users' table
     const userSql = 'UPDATE users SET name = ?, username = ?, email = ? WHERE id = ?';
     const [userResult] = await db.query(userSql, [name, username, email, id]);
 
-    // 2. If a new password is provided, update the 'passwords' table
     if (password && password.trim() !== '') {
         const passSql = 'UPDATE passwords SET password_hash = ? WHERE user_id = ?';
         await db.query(passSql, [password, id]);
@@ -74,6 +72,67 @@ async function updateUser(id, name, username, email, password) {
 
 async function deleteUser(id) {
     const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+}
+
+// ==========================================
+// Albums Functions
+// ==========================================
+async function getAlbumsByUserId(userId) {
+    const [albums] = await db.query('SELECT * FROM albums WHERE user_id = ? ORDER BY id ASC', [userId]);
+    return albums;
+}
+
+async function getAlbumById(id) {
+    const [albums] = await db.query('SELECT * FROM albums WHERE id = ?', [id]);
+    return albums.length > 0 ? albums[0] : null;
+}
+
+async function createAlbum(user_id, title) {
+    const [result] = await db.query('INSERT INTO albums (user_id, title) VALUES (?, ?)', [user_id, title]);
+    return { id: result.insertId, user_id, title };
+}
+
+async function updateAlbum(id, title) {
+    const [result] = await db.query('UPDATE albums SET title = ? WHERE id = ?', [title, id]);
+    return result.affectedRows > 0;
+}
+
+async function deleteAlbum(id) {
+    const [result] = await db.query('DELETE FROM albums WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+}
+
+// ==========================================
+// Photos Functions
+// ==========================================
+async function getPhotosByAlbumId(albumId) {
+    const [photos] = await db.query('SELECT * FROM photos WHERE album_id = ? ORDER BY id ASC', [albumId]);
+    return photos;
+}
+
+async function getPhotoById(id) {
+    const [photos] = await db.query('SELECT * FROM photos WHERE id = ?', [id]);
+    return photos.length > 0 ? photos[0] : null;
+}
+
+async function createPhoto(album_id, title, url, thumbnailUrl) {
+    const resolvedThumbnailUrl = thumbnailUrl || url;
+    const [result] = await db.query(
+        'INSERT INTO photos (album_id, title, url, thumbnailUrl) VALUES (?, ?, ?, ?)',
+        [album_id, title, url, resolvedThumbnailUrl]
+    );
+    return { id: result.insertId, album_id, title, url, thumbnailUrl: resolvedThumbnailUrl };
+}
+
+async function updatePhoto(id, title, url, thumbnailUrl) {
+    const resolvedThumbnailUrl = thumbnailUrl || url;
+    const [result] = await db.query('UPDATE photos SET title = ?, url = ?, thumbnailUrl = ? WHERE id = ?', [title, url, resolvedThumbnailUrl, id]);
+    return result.affectedRows > 0;
+}
+
+async function deletePhoto(id) {
+    const [result] = await db.query('DELETE FROM photos WHERE id = ?', [id]);
     return result.affectedRows > 0;
 }
 
@@ -89,22 +148,18 @@ async function getTodosByUserId(userId, filters = {}) {
     let sql = 'SELECT * FROM todos WHERE user_id = ?';
     const params = [userId];
 
-    // 1. Filter by search query if provided
     if (filters.q) {
         sql += ' AND title LIKE ?';
         params.push(`%${filters.q}%`);
     }
 
-    // 2. Filter by completion status (Completed / Pending)
     if (filters.completed !== undefined && filters.completed !== '') {
         sql += ' AND completed = ?';
-        // MySQL stores booleans as 0 or 1, convert the 'true'/'false' string accordingly
         params.push(filters.completed === 'true' ? 1 : 0);
     }
 
     sql += ' ORDER BY id ASC';
 
-    // 3. Limit the number of results if specified
     if (filters.limit) {
         sql += ' LIMIT ?';
         params.push(parseInt(filters.limit));
@@ -147,7 +202,6 @@ async function getPostsByUserId(userId, filters = {}) {
     let sql = 'SELECT * FROM posts WHERE user_id = ?';
     const params = [userId];
 
-    // Filter ONLY by title to make the search sharp and responsive
     if (filters.q) {
         sql += ' AND title LIKE ?';
         params.push(`%${filters.q}%`);
@@ -155,7 +209,6 @@ async function getPostsByUserId(userId, filters = {}) {
 
     sql += ' ORDER BY id ASC';
 
-    // Limit the number of results if specified
     if (filters.limit) {
         sql += ' LIMIT ?';
         params.push(parseInt(filters.limit));
@@ -218,11 +271,12 @@ async function deleteComment(id) {
     return result.affectedRows > 0;
 }
 
-
 module.exports = {
     verifyLogin, registerUser,
     getAllUsers, getUserById, createUser, updateUser, deleteUser,
+    getAlbumsByUserId, getAlbumById, createAlbum, updateAlbum, deleteAlbum,
+    getPhotosByAlbumId, getPhotoById, createPhoto, updatePhoto, deletePhoto,
     getAllTodos, getTodosByUserId, getTodoById, createTodo, updateTodo, deleteTodo,
     getAllPosts, getPostsByUserId, getPostById, createPost, updatePost, deletePost,
-    getAllComments, getCommentsByPostId,getCommentById,createComment, updateComment, deleteComment,updateUser
+    getAllComments, getCommentsByPostId, getCommentById, createComment, updateComment, deleteComment
 };

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "seed": "node backend/seed.js",
+    "seed:albums": "node backend/seed-albums-photos.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

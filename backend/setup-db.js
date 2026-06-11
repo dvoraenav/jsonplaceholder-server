@@ -39,6 +39,22 @@ connection.connect((err) => {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS albums (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      title VARCHAR(255) NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS photos (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      album_id INT,
+      title VARCHAR(255) NOT NULL,
+      url TEXT NOT NULL,
+      thumbnailUrl TEXT NOT NULL,
+      FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS posts (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT,
@@ -54,6 +70,22 @@ connection.connect((err) => {
         email VARCHAR(100) NOT NULL,
         body TEXT,
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS albums (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      title VARCHAR(255) NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS photos (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      album_id INT,
+      title VARCHAR(255) NOT NULL,
+      url TEXT NOT NULL,
+      thumbnailUrl TEXT NOT NULL,
+      FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
     );
   `;
 

@@ -69,10 +69,99 @@ async function deleteUser(id) {
 }
 
 // ==========================================
+// Albums Functions
+// ==========================================
+async function getAlbumsByUserId(userId) {
+    const [albums] = await db.query('SELECT * FROM albums WHERE user_id = ? ORDER BY id', [userId]);
+    return albums;
+}
+
+async function getAlbumById(id) {
+    const [albums] = await db.query('SELECT * FROM albums WHERE id = ?', [id]);
+    return albums.length > 0 ? albums[0] : null;
+}
+
+async function createAlbum(user_id, title) {
+    const [result] = await db.query('INSERT INTO albums (user_id, title) VALUES (?, ?)', [user_id, title]);
+    return { id: result.insertId, user_id, title };
+}
+
+async function updateAlbum(id, title) {
+    const [result] = await db.query('UPDATE albums SET title = ? WHERE id = ?', [title, id]);
+    return result.affectedRows > 0;
+}
+
+async function deleteAlbum(id) {
+    const [result] = await db.query('DELETE FROM albums WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+}
+
+// ==========================================
+// Photos Functions
+// ==========================================
+async function getPhotosByAlbumId(albumId) {
+    const [photos] = await db.query('SELECT * FROM photos WHERE album_id = ? ORDER BY id', [albumId]);
+    return photos;
+}
+
+async function getPhotoById(id) {
+    const [photos] = await db.query('SELECT * FROM photos WHERE id = ?', [id]);
+    return photos.length > 0 ? photos[0] : null;
+}
+
+async function createPhoto(album_id, title, url, thumbnailUrl) {
+    const resolvedThumbnailUrl = thumbnailUrl || url;
+    const [result] = await db.query(
+        'INSERT INTO photos (album_id, title, url, thumbnailUrl) VALUES (?, ?, ?, ?)',
+        [album_id, title, url, resolvedThumbnailUrl]
+    );
+    return { id: result.insertId, album_id, title, url, thumbnailUrl: resolvedThumbnailUrl };
+}
+
+async function updatePhoto(id, title, url, thumbnailUrl) {
+    const resolvedThumbnailUrl = thumbnailUrl || url;
+    const [result] = await db.query(
+        'UPDATE photos SET title = ?, url = ?, thumbnailUrl = ? WHERE id = ?',
+        [title, url, resolvedThumbnailUrl, id]
+    );
+    return result.affectedRows > 0;
+}
+
+async function deletePhoto(id) {
+    const [result] = await db.query('DELETE FROM photos WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+}
+
+// ==========================================
 // Todos Functions
 // ==========================================
 async function getAllTodos() {
-    const [todos] = await db.query('SELECT * FROM todos');
+    const [todos] = await db.query('SELECT * FROM todos ORDER BY id');
+    return todos;
+}
+
+async function getTodosByUserId(userId, filters = {}) {
+    let sql = 'SELECT * FROM todos WHERE user_id = ?';
+    const params = [userId];
+
+    if (filters.completed !== undefined && filters.completed !== '') {
+        sql += ' AND completed = ?';
+        params.push(filters.completed === 'true' || filters.completed === '1' || filters.completed === 1 ? 1 : 0);
+    }
+
+    if (filters.q) {
+        sql += ' AND title LIKE ?';
+        params.push(`%${filters.q}%`);
+    }
+
+    sql += ' ORDER BY id';
+
+    if (filters.limit) {
+        sql += ' LIMIT ?';
+        params.push(parseInt(filters.limit, 10));
+    }
+
+    const [todos] = await db.query(sql, params);
     return todos;
 }
 
@@ -101,7 +190,27 @@ async function deleteTodo(id) {
 // Posts Functions
 // ==========================================
 async function getAllPosts() {
-    const [posts] = await db.query('SELECT * FROM posts');
+    const [posts] = await db.query('SELECT * FROM posts ORDER BY id');
+    return posts;
+}
+
+async function getPostsByUserId(userId, filters = {}) {
+    let sql = 'SELECT * FROM posts WHERE user_id = ?';
+    const params = [userId];
+
+    if (filters.q) {
+        sql += ' AND (title LIKE ? OR body LIKE ?)';
+        params.push(`%${filters.q}%`, `%${filters.q}%`);
+    }
+
+    sql += ' ORDER BY id';
+
+    if (filters.limit) {
+        sql += ' LIMIT ?';
+        params.push(parseInt(filters.limit, 10));
+    }
+
+    const [posts] = await db.query(sql, params);
     return posts;
 }
 
@@ -129,13 +238,28 @@ async function deletePost(id) {
 // Comments Functions
 // ==========================================
 async function getAllComments() {
-    const [comments] = await db.query('SELECT * FROM comments');
+    const [comments] = await db.query('SELECT * FROM comments ORDER BY id');
     return comments;
 }
 
-async function getCommentsByPostId(postId) {
-    const [comments] = await db.query('SELECT * FROM comments WHERE post_id = ?', [postId]);
+async function getCommentsByPostId(postId, filters = {}) {
+    let sql = 'SELECT * FROM comments WHERE post_id = ?';
+    const params = [postId];
+
+    sql += ' ORDER BY id';
+
+    if (filters.limit) {
+        sql += ' LIMIT ?';
+        params.push(parseInt(filters.limit, 10));
+    }
+
+    const [comments] = await db.query(sql, params);
     return comments;
+}
+
+async function getCommentById(id) {
+    const [comments] = await db.query('SELECT * FROM comments WHERE id = ?', [id]);
+    return comments.length > 0 ? comments[0] : null;
 }
 
 async function createComment(post_id, name, email, body) {
@@ -156,7 +280,9 @@ async function deleteComment(id) {
 module.exports = {
     verifyLogin, registerUser,
     getAllUsers, getUserById, createUser, updateUser, deleteUser,
-    getAllTodos, getTodoById, createTodo, updateTodo, deleteTodo,
-    getAllPosts, getPostById, createPost, updatePost, deletePost,
-    getAllComments, getCommentsByPostId, createComment, updateComment, deleteComment
+    getAlbumsByUserId, getAlbumById, createAlbum, updateAlbum, deleteAlbum,
+    getPhotosByAlbumId, getPhotoById, createPhoto, updatePhoto, deletePhoto,
+    getAllTodos, getTodosByUserId, getTodoById, createTodo, updateTodo, deleteTodo,
+    getAllPosts, getPostsByUserId, getPostById, createPost, updatePost, deletePost,
+    getAllComments, getCommentsByPostId, getCommentById, createComment, updateComment, deleteComment
 };

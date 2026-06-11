@@ -26,7 +26,25 @@ CREATE TABLE todos (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 4. Posts table (Linked to users)
+-- 4. Albums table (Linked to users)
+CREATE TABLE albums (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    title VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 5. Photos table (Linked to albums)
+CREATE TABLE photos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    album_id INT,
+    title VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL,
+    thumbnailUrl TEXT NOT NULL,
+    FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
+);
+
+-- 6. Posts table (Linked to users)
 CREATE TABLE posts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -35,7 +53,7 @@ CREATE TABLE posts (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 5. Comments table (Must be created last as it depends on posts)
+-- 7. Comments table (Must be created last as it depends on posts)
 CREATE TABLE comments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     post_id INT,
@@ -43,4 +61,22 @@ CREATE TABLE comments (
     email VARCHAR(100) NOT NULL,
     body TEXT,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- 6. Albums table (Linked to users)
+CREATE TABLE albums (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    title VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 7. Photos table (Linked to albums)
+CREATE TABLE photos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    album_id INT,
+    title VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL,
+    thumbnailUrl TEXT NOT NULL,
+    FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
 );

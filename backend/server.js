@@ -119,6 +119,134 @@ app.delete('/api/users/:id', async (req, res) => {
 });
 
 // ==========================================
+// Albums Routes
+// ==========================================
+app.get('/api/users/:userId/albums', async (req, res) => {
+    try {
+        const albums = await queries.getAlbumsByUserId(req.params.userId);
+        res.json(albums);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching user albums' });
+    }
+});
+
+app.post('/api/albums', async (req, res) => {
+    try {
+        const { user_id, title } = req.body;
+        if (!user_id || !title) return res.status(400).json({ error: 'Missing fields' });
+
+        const newAlbum = await queries.createAlbum(user_id, title);
+        res.status(201).json(newAlbum);
+    } catch (error) {
+        res.status(500).json({ error: 'Error creating album' });
+    }
+});
+
+app.put('/api/albums/:id', async (req, res) => {
+    try {
+        const { title, userId } = req.body;
+        const album = await queries.getAlbumById(req.params.id);
+        if (!album) return res.status(404).json({ error: 'Album not found' });
+
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Album does not belong to active user' });
+        }
+
+        const success = await queries.updateAlbum(req.params.id, title);
+        if (!success) return res.status(404).json({ error: 'Album not found' });
+        res.json({ message: 'Album updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error updating album' });
+    }
+});
+
+app.delete('/api/albums/:id', async (req, res) => {
+    try {
+        const userId = req.query?.userId || req.body?.userId;
+        const album = await queries.getAlbumById(req.params.id);
+        if (!album) return res.status(404).json({ error: 'Album not found' });
+
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Album does not belong to active user' });
+        }
+
+        const success = await queries.deleteAlbum(req.params.id);
+        if (!success) return res.status(404).json({ error: 'Album not found' });
+        res.json({ message: 'Album deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting album' });
+    }
+});
+
+// ==========================================
+// Photos Routes
+// ==========================================
+app.get('/api/albums/:albumId/photos', async (req, res) => {
+    try {
+        const photos = await queries.getPhotosByAlbumId(req.params.albumId);
+        res.json(photos);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching album photos' });
+    }
+});
+
+app.post('/api/photos', async (req, res) => {
+    try {
+        const { album_id, title, url, thumbnailUrl, userId } = req.body;
+        if (!album_id || !title || !url) return res.status(400).json({ error: 'Missing fields' });
+
+        const album = await queries.getAlbumById(album_id);
+        if (!album) return res.status(404).json({ error: 'Album not found' });
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Photo does not belong to active user' });
+        }
+
+        const newPhoto = await queries.createPhoto(album_id, title, url, thumbnailUrl);
+        res.status(201).json(newPhoto);
+    } catch (error) {
+        res.status(500).json({ error: 'Error creating photo' });
+    }
+});
+
+app.put('/api/photos/:id', async (req, res) => {
+    try {
+        const { title, url, thumbnailUrl, userId } = req.body;
+        const photo = await queries.getPhotoById(req.params.id);
+        if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+        const album = await queries.getAlbumById(photo.album_id);
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Photo does not belong to active user' });
+        }
+
+        const success = await queries.updatePhoto(req.params.id, title, url, thumbnailUrl);
+        if (!success) return res.status(404).json({ error: 'Photo not found' });
+        res.json({ message: 'Photo updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error updating photo' });
+    }
+});
+
+app.delete('/api/photos/:id', async (req, res) => {
+    try {
+        const userId = req.query?.userId || req.body?.userId;
+        const photo = await queries.getPhotoById(req.params.id);
+        if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+        const album = await queries.getAlbumById(photo.album_id);
+        if (userId && album.user_id !== parseInt(userId, 10)) {
+            return res.status(403).json({ error: 'Unauthorized: Photo does not belong to active user' });
+        }
+
+        const success = await queries.deletePhoto(req.params.id);
+        if (!success) return res.status(404).json({ error: 'Photo not found' });
+        res.json({ message: 'Photo deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting photo' });
+    }
+});
+
+// ==========================================
 // Todos Routes
 // ==========================================
 app.get('/api/todos', async (req, res) => {
