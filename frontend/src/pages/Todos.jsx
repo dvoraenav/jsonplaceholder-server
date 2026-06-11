@@ -20,19 +20,13 @@ function Todos({ currentUser }) {
 
   useEffect(() => {
     fetchTodos();
-  }, [currentUser, searchQuery, statusFilter, limitFilter]);
+  }, [currentUser]);
 
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      
-      // Build dynamic query parameters
-      const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append('q', searchQuery.trim());
-      if (statusFilter !== '') params.append('completed', statusFilter);
-      if (limitFilter !== '') params.append('limit', limitFilter);
-      
-      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/todos?${params.toString()}`);
+
+      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/todos`);
       if (!response.ok) throw new Error('Failed to fetch todos');
       const data = await response.json();
       
@@ -47,6 +41,22 @@ function Todos({ currentUser }) {
       setLoading(false);
     }
   };
+
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const visibleTodos = todos
+    .filter((todo) => {
+      const isCompleted = todo.completed === true || todo.completed === 1 || todo.completed === '1';
+
+      if (statusFilter !== '') {
+        const wantsCompleted = statusFilter === 'true';
+        if (isCompleted !== wantsCompleted) return false;
+      }
+
+      if (!normalizedSearchQuery) return true;
+
+      return (todo.title ?? '').toLowerCase().includes(normalizedSearchQuery);
+    })
+    .slice(0, limitFilter ? parseInt(limitFilter, 10) : undefined);
 
   const handleAddTodo = async (e) => {
     e.preventDefault();
@@ -284,7 +294,7 @@ function Todos({ currentUser }) {
             </div>
           </div>
 
-          {todos.length === 0 ? (
+          {visibleTodos.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon-container">
                 <EmptyIcon size={48} className="empty-icon-svg" />
@@ -294,7 +304,7 @@ function Todos({ currentUser }) {
             </div>
           ) : (
             <div className="todos-list">
-              {todos.map((todo) => (
+              {visibleTodos.map((todo) => (
                 <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
                   <div className="todo-checkbox">
                     <label className="todo-checkbox-container">

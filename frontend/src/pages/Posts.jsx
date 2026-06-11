@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { PostIcon, PlusIcon, CloseIcon, CheckIcon, EmptyIcon, EditIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon, CommentIcon } from '../components/Icons';
 import './Posts.css';
 
 function Posts({ currentUser }) {
-  const { username } = useParams();
+  const { username, postId } = useParams();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [expandedPostId, setExpandedPostId] = useState(null);
   const [postComments, setPostComments] = useState({});
@@ -26,17 +27,28 @@ function Posts({ currentUser }) {
 
   useEffect(() => {
     fetchPosts();
-  }, [currentUser, searchQuery, limitFilter]);
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!posts.length || !postId) {
+      if (!postId) setExpandedPostId(null);
+      return;
+    }
+
+    const numericPostId = parseInt(postId, 10);
+    if (Number.isNaN(numericPostId)) return;
+
+    setExpandedPostId(numericPostId);
+    if (!postComments[numericPostId]) {
+      fetchComments(numericPostId);
+    }
+  }, [postId, posts]);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
 
-      const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append('q', searchQuery.trim());
-      if (limitFilter !== '') params.append('limit', limitFilter);
-
-      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/posts?${params.toString()}`);
+      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/posts`);
       if (!response.ok) throw new Error('Failed to fetch posts');
       const data = await response.json();
       
@@ -51,6 +63,16 @@ function Posts({ currentUser }) {
       setLoading(false);
     }
   };
+
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const visiblePosts = posts
+    .filter((post) => {
+      if (!normalizedSearchQuery) return true;
+
+      const searchableText = `${post.title ?? ''} ${post.body ?? ''}`.toLowerCase();
+      return searchableText.includes(normalizedSearchQuery);
+    })
+    .slice(0, limitFilter ? parseInt(limitFilter, 10) : undefined);
 
   const fetchComments = async (postId) => {
     try {
@@ -258,11 +280,13 @@ function Posts({ currentUser }) {
   const togglePostExpansion = async (postId) => {
     if (expandedPostId === postId) {
       setExpandedPostId(null);
+      navigate(`/users/${username}/posts`);
     } else {
       setExpandedPostId(postId);
       if (!postComments[postId]) {
         await fetchComments(postId);
       }
+      navigate(`/users/${username}/posts/${postId}/comments`);
     }
   };
 
@@ -363,7 +387,7 @@ function Posts({ currentUser }) {
         </div>
       ) : (
         <>
-          {posts.length === 0 ? (
+          {visiblePosts.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon-container">
                 <EmptyIcon size={48} className="empty-icon-svg" />
@@ -373,7 +397,7 @@ function Posts({ currentUser }) {
             </div>
           ) : (
             <div className="posts-list">
-              {posts.map((post) => (
+              {visiblePosts.map((post) => (
                 <div key={post.id} className="post-card">
                   <div className="post-header">
                     <div className="post-meta">
