@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostIcon, PlusIcon, CloseIcon, CheckIcon, EmptyIcon, EditIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon, CommentIcon } from '../components/Icons';
+import { fetchWithCache, updateCacheItem, invalidateCache } from '../utils/apiCache';
 import './Posts.css';
 
 function Posts({ currentUser }) {
@@ -25,6 +26,10 @@ function Posts({ currentUser }) {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [commentEditData, setCommentEditData] = useState('');
 
+  // Cache keys
+  const postsUrl = `http://localhost:3000/api/users/${currentUser.id}/posts`;
+  const commentsUrlFor = (id) => `http://localhost:3000/api/posts/${id}/comments`;
+
   useEffect(() => {
     fetchPosts();
   }, [currentUser]);
@@ -48,12 +53,10 @@ function Posts({ currentUser }) {
     try {
       setLoading(true);
 
-      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/posts`);
-      if (!response.ok) throw new Error('Failed to fetch posts');
-      const data = await response.json();
-      
+      const data = await fetchWithCache(postsUrl);
+
       // Enforce sorting by ID
-      const sortedPosts = data.sort((a, b) => a.id - b.id);
+      const sortedPosts = [...data].sort((a, b) => a.id - b.id);
       setPosts(sortedPosts);
       setError('');
     } catch (err) {
@@ -76,12 +79,10 @@ function Posts({ currentUser }) {
 
   const fetchComments = async (postId) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/posts/${postId}/comments`);
-      if (!response.ok) throw new Error('Failed to fetch comments');
-      const data = await response.json();
-      
+      const data = await fetchWithCache(commentsUrlFor(postId));
+
       // Sort comments by ID
-      const sortedComments = data.sort((a, b) => a.id - b.id);
+      const sortedComments = [...data].sort((a, b) => a.id - b.id);
       setPostComments(prev => ({ ...prev, [postId]: sortedComments }));
     } catch (err) {
       console.error('Failed to fetch comments:', err);
@@ -107,7 +108,15 @@ function Posts({ currentUser }) {
       });
       if (!response.ok) throw new Error('Failed to create post');
       const newPost = await response.json();
-      setPosts([newPost, ...posts].sort((a, b) => a.id - b.id));
+      // Enrich with author info so the JOIN-backed UI stays consistent locally
+      const enrichedPost = {
+        ...newPost,
+        authorName: newPost.authorName ?? currentUser.name,
+        authorEmail: newPost.authorEmail ?? currentUser.email,
+      };
+      setPosts([enrichedPost, ...posts].sort((a, b) => a.id - b.id));
+      // Granular update: prepend the new post to the cached array in memory
+      updateCacheItem(postsUrl, (cached) => [enrichedPost, ...cached]);
       setPostFormData({ title: '', body: '' });
       setShowPostForm(false);
       setSuccess('Post created successfully!');
@@ -142,6 +151,14 @@ function Posts({ currentUser }) {
           ? { ...p, title: postFormData.title, body: postFormData.body }
           : p
       ).sort((a, b) => a.id - b.id));
+      // Granular update: modify only the edited post in the cached array
+      updateCacheItem(postsUrl, (cached) =>
+        cached.map(p =>
+          p.id === editingPostId
+            ? { ...p, title: postFormData.title, body: postFormData.body }
+            : p
+        )
+      );
       resetPostForm();
       setSuccess('Post updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -160,6 +177,11 @@ function Posts({ currentUser }) {
       });
       if (!response.ok) throw new Error('Failed to delete post');
       setPosts(posts.filter(p => p.id !== id));
+      // Granular update: drop only the deleted post from the cached array
+      updateCacheItem(postsUrl, (cached) => cached.filter(p => p.id !== id));
+      // Cascade: the backend deletes this post's comments (ON DELETE CASCADE),
+      // so its comments cache is now stale -> invalidate that key.
+      invalidateCache(commentsUrlFor(id));
       setSuccess('Post deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
@@ -190,6 +212,8 @@ function Posts({ currentUser }) {
         ...prev,
         [postId]: [...(prev[postId] || []), newComment].sort((a, b) => a.id - b.id)
       }));
+      // Granular update: append the new comment to this post's cached comments
+      updateCacheItem(commentsUrlFor(postId), (cached) => [...cached, newComment]);
       setNewCommentText(prev => ({ ...prev, [postId]: '' }));
       setSuccess('Comment added successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -222,6 +246,12 @@ function Posts({ currentUser }) {
           c.id === comment.id ? { ...c, body: commentEditData } : c
         ).sort((a, b) => a.id - b.id)
       }));
+      // Granular update: modify only the edited comment in the cached array
+      updateCacheItem(commentsUrlFor(postId), (cached) =>
+        cached.map(c =>
+          c.id === comment.id ? { ...c, body: commentEditData } : c
+        )
+      );
 
       setEditingCommentId(null);
       setCommentEditData('');
@@ -246,6 +276,8 @@ function Posts({ currentUser }) {
         ...prev,
         [postId]: prev[postId].filter(c => c.id !== commentId)
       }));
+      // Granular update: drop only the deleted comment from the cached array
+      updateCacheItem(commentsUrlFor(postId), (cached) => cached.filter(c => c.id !== commentId));
       setSuccess('Comment deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {

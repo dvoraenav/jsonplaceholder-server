@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { PhotoIcon, PlusIcon, CloseIcon, TrashIcon, EmptyIcon, ChevronRightIcon } from '../components/Icons';
+import { fetchWithCache, updateCacheItem } from '../utils/apiCache';
 import './Photos.css';
 
 function Photos({ currentUser }) {
@@ -13,6 +14,10 @@ function Photos({ currentUser }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Cache keys (albumsUrl matches the Albums page so it shares one entry)
+  const albumsUrl = `http://localhost:3000/api/users/${currentUser.id}/albums`;
+  const photosUrl = `http://localhost:3000/api/albums/${albumId}/photos`;
+
   useEffect(() => {
     fetchAlbumAndPhotos();
   }, [currentUser, albumId]);
@@ -20,20 +25,15 @@ function Photos({ currentUser }) {
   const fetchAlbumAndPhotos = async () => {
     try {
       setLoading(true);
-      const [albumsResponse, photosResponse] = await Promise.all([
-        fetch(`http://localhost:3000/api/users/${currentUser.id}/albums`),
-        fetch(`http://localhost:3000/api/albums/${albumId}/photos`)
+      const [albums, data] = await Promise.all([
+        fetchWithCache(albumsUrl),
+        fetchWithCache(photosUrl)
       ]);
 
-      if (!albumsResponse.ok) throw new Error('Failed to fetch albums');
-      if (!photosResponse.ok) throw new Error('Failed to fetch photos');
-
-      const albums = await albumsResponse.json();
-      const data = await photosResponse.json();
       const matchedAlbum = albums.find(album => String(album.id) === String(albumId));
 
       setAlbumTitle(matchedAlbum?.title || `Album #${albumId}`);
-      setPhotos(data.sort((a, b) => a.id - b.id));
+      setPhotos([...data].sort((a, b) => a.id - b.id));
       setError('');
     } catch (err) {
       setError('Failed to load photos');
@@ -65,6 +65,8 @@ function Photos({ currentUser }) {
       if (!response.ok) throw new Error('Failed to create photo');
       const newPhoto = await response.json();
       setPhotos(prev => [...prev, newPhoto].sort((a, b) => a.id - b.id));
+      // Granular update: append the new photo to this album's cached array
+      updateCacheItem(photosUrl, (cached) => [...cached, newPhoto]);
       setFormData({ title: '', url: '' });
       setShowForm(false);
       setSuccess('Photo added successfully!');
@@ -84,6 +86,8 @@ function Photos({ currentUser }) {
       });
       if (!response.ok) throw new Error('Failed to delete photo');
       setPhotos(prev => prev.filter(photo => photo.id !== photoId));
+      // Granular update: drop only the deleted photo from the cached array
+      updateCacheItem(photosUrl, (cached) => cached.filter(photo => photo.id !== photoId));
       setSuccess('Photo deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {

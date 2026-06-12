@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { TodoIcon, PlusIcon, CloseIcon, EditIcon, TrashIcon, EmptyIcon, CheckIcon } from '../components/Icons';
+import { fetchWithCache, updateCacheItem } from '../utils/apiCache';
 import './Todos.css';
 
 function Todos({ currentUser }) {
@@ -18,6 +19,9 @@ function Todos({ currentUser }) {
   const [statusFilter, setStatusFilter] = useState('');
   const [limitFilter, setLimitFilter] = useState('');
 
+  // Cache key for this user's todos collection
+  const todosUrl = `http://localhost:3000/api/users/${currentUser.id}/todos`;
+
   useEffect(() => {
     fetchTodos();
   }, [currentUser]);
@@ -26,12 +30,10 @@ function Todos({ currentUser }) {
     try {
       setLoading(true);
 
-      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/todos`);
-      if (!response.ok) throw new Error('Failed to fetch todos');
-      const data = await response.json();
-      
+      const data = await fetchWithCache(todosUrl);
+
       // Explicitly sort items by ID
-      const sortedTodos = data.sort((a, b) => a.id - b.id);
+      const sortedTodos = [...data].sort((a, b) => a.id - b.id);
       setTodos(sortedTodos);
       setError('');
     } catch (err) {
@@ -78,6 +80,8 @@ function Todos({ currentUser }) {
       if (!response.ok) throw new Error('Failed to create todo');
       const newTodo = await response.json();
       setTodos([...todos, newTodo].sort((a, b) => a.id - b.id));
+      // Granular update: append the new todo to the cached array in memory
+      updateCacheItem(todosUrl, (cached) => [...cached, newTodo]);
       setFormData({ title: '' });
       setShowForm(false);
       setSuccess('Todo added successfully!');
@@ -111,6 +115,14 @@ function Todos({ currentUser }) {
           ? { ...t, title: formData.title, completed: formData.completed }
           : t
       ).sort((a, b) => a.id - b.id));
+      // Granular update: modify only the edited todo in the cached array
+      updateCacheItem(todosUrl, (cached) =>
+        cached.map(t =>
+          t.id === editingId
+            ? { ...t, title: formData.title, completed: formData.completed }
+            : t
+        )
+      );
       resetForm();
       setSuccess('Todo updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -134,6 +146,12 @@ function Todos({ currentUser }) {
       setTodos(todos.map(t =>
         t.id === todo.id ? { ...t, completed: !t.completed } : t
       ).sort((a, b) => a.id - b.id));
+      // Granular update: flip completion on only this todo in the cache
+      updateCacheItem(todosUrl, (cached) =>
+        cached.map(t =>
+          t.id === todo.id ? { ...t, completed: !t.completed } : t
+        )
+      );
     } catch (err) {
       setError('Failed to toggle todo');
       console.error(err);
@@ -149,6 +167,8 @@ function Todos({ currentUser }) {
       });
       if (!response.ok) throw new Error('Failed to delete todo');
       setTodos(todos.filter(t => t.id !== id));
+      // Granular update: drop only the deleted todo from the cached array
+      updateCacheItem(todosUrl, (cached) => cached.filter(t => t.id !== id));
       setSuccess('Todo deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {

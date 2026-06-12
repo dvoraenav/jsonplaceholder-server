@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlbumIcon, PlusIcon, CloseIcon, TrashIcon, EmptyIcon, ChevronRightIcon } from '../components/Icons';
+import { fetchWithCache, updateCacheItem, invalidateCache } from '../utils/apiCache';
 import './Albums.css';
 
 function Albums({ currentUser }) {
@@ -14,6 +15,9 @@ function Albums({ currentUser }) {
   const [success, setSuccess] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Cache key for this user's albums collection
+  const albumsUrl = `http://localhost:3000/api/users/${currentUser.id}/albums`;
+
   useEffect(() => {
     fetchAlbums();
   }, [currentUser]);
@@ -21,10 +25,8 @@ function Albums({ currentUser }) {
   const fetchAlbums = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3000/api/users/${currentUser.id}/albums`);
-      if (!response.ok) throw new Error('Failed to fetch albums');
-      const data = await response.json();
-      setAlbums(data.sort((a, b) => a.id - b.id));
+      const data = await fetchWithCache(albumsUrl);
+      setAlbums([...data].sort((a, b) => a.id - b.id));
       setError('');
     } catch (err) {
       setError('Failed to load albums');
@@ -50,6 +52,8 @@ function Albums({ currentUser }) {
       if (!response.ok) throw new Error('Failed to create album');
       const newAlbum = await response.json();
       setAlbums(prev => [...prev, newAlbum].sort((a, b) => a.id - b.id));
+      // Granular update: append the new album to the cached array
+      updateCacheItem(albumsUrl, (cached) => [...cached, newAlbum]);
       setTitle('');
       setShowForm(false);
       setSuccess('Album created successfully!');
@@ -69,6 +73,11 @@ function Albums({ currentUser }) {
       });
       if (!response.ok) throw new Error('Failed to delete album');
       setAlbums(prev => prev.filter(album => album.id !== albumId));
+      // Granular update: drop only the deleted album from the cached array
+      updateCacheItem(albumsUrl, (cached) => cached.filter(album => album.id !== albumId));
+      // Cascade: the backend deletes this album's photos (ON DELETE CASCADE),
+      // so its photos cache is now stale -> invalidate that key to force a refetch.
+      invalidateCache(`http://localhost:3000/api/albums/${albumId}/photos`);
       setSuccess('Album deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TodoIcon, PostIcon, UserIcon, PlusIcon, ChevronRightIcon, EmptyIcon } from '../components/Icons';
+import { fetchWithCache, updateCacheItem } from '../utils/apiCache';
 import './Home.css';
 
 function Home({ currentUser }) {
@@ -10,6 +11,10 @@ function Home({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Cache keys (identical to the Todos/Posts pages so they share entries)
+  const todosUrl = `http://localhost:3000/api/users/${currentUser.id}/todos`;
+  const postsUrl = `http://localhost:3000/api/users/${currentUser.id}/posts`;
+
   useEffect(() => {
     fetchDashboardData();
   }, [currentUser]);
@@ -17,16 +22,10 @@ function Home({ currentUser }) {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [todosResponse, postsResponse] = await Promise.all([
-        fetch(`http://localhost:3000/api/users/${currentUser.id}/todos`),
-        fetch(`http://localhost:3000/api/users/${currentUser.id}/posts`)
+      const [todosData, postsData] = await Promise.all([
+        fetchWithCache(todosUrl),
+        fetchWithCache(postsUrl)
       ]);
-
-      if (!todosResponse.ok) throw new Error('Failed to fetch todos');
-      if (!postsResponse.ok) throw new Error('Failed to fetch posts');
-
-      const todosData = await todosResponse.json();
-      const postsData = await postsResponse.json();
 
       setTodos(todosData);
       setPosts(postsData);
@@ -54,6 +53,12 @@ function Home({ currentUser }) {
       setTodos(todos.map(t =>
         t.id === todo.id ? { ...t, completed: !t.completed } : t
       ));
+      // Granular update: keep the shared todos cache in sync
+      updateCacheItem(todosUrl, (cached) =>
+        cached.map(t =>
+          t.id === todo.id ? { ...t, completed: !t.completed } : t
+        )
+      );
     } catch (err) {
       console.error('Failed to toggle todo:', err);
     }

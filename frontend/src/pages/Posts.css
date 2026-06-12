@@ -412,6 +412,16 @@
   letter-spacing: -0.01em;
 }
 
+.post-author {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--primary, #10b981);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .post-actions {
   display: flex;
   gap: 8px;

@@ -199,15 +199,18 @@ async function getAllPosts() {
 }
 
 async function getPostsByUserId(userId, filters = {}) {
-    let sql = 'SELECT * FROM posts WHERE user_id = ?';
+    let sql = `
+        SELECT p.*, u.name AS authorName, u.email AS authorEmail
+        FROM posts p        
+        WHERE p.user_id = ?`;
     const params = [userId];
 
     if (filters.q) {
-        sql += ' AND title LIKE ?';
+        sql += ' AND p.title LIKE ?';
         params.push(`%${filters.q}%`);
     }
 
-    sql += ' ORDER BY id ASC';
+    sql += ' ORDER BY p.id ASC';
 
     if (filters.limit) {
         sql += ' LIMIT ?';
@@ -247,7 +250,15 @@ async function getAllComments() {
 }
 
 async function getCommentsByPostId(postId) {
-    const [comments] = await db.query('SELECT * FROM comments WHERE post_id = ?', [postId]);
+    // JOIN with posts so each comment carries its parent post's title in ONE query.
+    const [comments] = await db.query(
+        `SELECT c.*, p.title AS postTitle
+         FROM comments c
+         JOIN posts p ON c.post_id = p.id
+         WHERE c.post_id = ?
+         ORDER BY c.id ASC`,
+        [postId]
+    );
     return comments;
 }
 
