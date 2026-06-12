@@ -38,6 +38,10 @@ app.post('/api/login', async (req, res) => {
         const user = await queries.verifyLogin(username, password);
         if (!user) return res.status(401).json({ error: 'Invalid username or password' });
 
+        if (user.is_blocked) {
+            return res.status(403).json({ error: 'Your account has been blocked by an administrator.' });
+        }
+
         res.json({ message: 'Login successful', user });
     } catch (error) {
         console.error(error);
@@ -115,6 +119,52 @@ app.delete('/api/users/:id', async (req, res) => {
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Error deleting user' });
+    }
+});
+
+// ==========================================
+// Admin Routes
+// ==========================================
+// Helper: confirm the requester exists and is an admin.
+async function isRequesterAdmin(requesterId) {
+    if (!requesterId) return false;
+    const requester = await queries.getUserById(requesterId);
+    return !!(requester && requester.is_admin);
+}
+
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const requesterId = req.query.requesterId;
+        if (!(await isRequesterAdmin(requesterId))) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        const users = await queries.getAllUsersForAdmin();
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error fetching users' });
+    }
+});
+
+app.put('/api/admin/users/:id/block', async (req, res) => {
+    try {
+        const { is_blocked, requesterId } = req.body;
+        if (!(await isRequesterAdmin(requesterId))) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        // An admin cannot block themselves.
+        if (parseInt(requesterId, 10) === parseInt(req.params.id, 10)) {
+            return res.status(400).json({ error: 'You cannot change your own block status' });
+        }
+
+        const success = await queries.toggleUserBlockStatus(req.params.id, is_blocked);
+        if (!success) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'User block status updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error updating user block status' });
     }
 });
 

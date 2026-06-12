@@ -7,6 +7,7 @@ import Albums from './pages/Albums';
 import Photos from './pages/Photos';
 import Posts from './pages/Posts';
 import Home from './pages/Home';
+import AdminDashboard from './pages/AdminDashboard';
 import Navbar from './components/Navbar';
 
 function App() {
@@ -76,6 +77,12 @@ function App() {
         <Route
           path="/users/:username/posts/:postId/comments"
           element={currentUser ? <Posts currentUser={currentUser} /> : <Navigate to="/login" />}
+        />
+
+        {/* Admin-only Route */}
+        <Route
+          path="/admin/dashboard"
+          element={currentUser && currentUser.is_admin ? <AdminDashboard currentUser={currentUser} /> : <Navigate to="/" />}
         />
 
         {/* Default Redirect */}

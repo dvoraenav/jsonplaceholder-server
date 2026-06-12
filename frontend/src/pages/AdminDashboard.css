@@ -1,0 +1,196 @@
+/* AdminDashboard.css */
+
+.admin-container {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 24px 40px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-icon-container {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  color: var(--primary);
+  background: var(--accent-bg);
+}
+
+.admin-header h2 {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 1.5rem;
+}
+
+.admin-subtitle {
+  margin: 2px 0 0;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.admin-count {
+  background: var(--accent-bg);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-table-wrapper {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table thead th {
+  text-align: left;
+  padding: 14px 18px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-light);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.admin-table tbody td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--primary-light);
+}
+
+.row-blocked {
+  background: var(--danger-light);
+}
+
+.row-blocked:hover {
+  background: var(--danger-light);
+}
+
+.cell-id {
+  color: var(--text-light);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cell-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.cell-name-icon {
+  color: var(--text-light);
+}
+
+.cell-email {
+  color: var(--text-light);
+}
+
+.cell-self {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.badge-admin {
+  background: var(--info);
+  color: #fff;
+}
+
+.badge-blocked {
+  background: var(--danger);
+  color: #fff;
+  margin-left: 0;
+}
+
+.badge-active {
+  background: var(--success-light);
+  color: var(--primary-hover);
+  border: 1px solid var(--success-border);
+  margin-left: 0;
+}
+
+.btn-block {
+  padding: 7px 16px;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-light);
+  color: var(--danger-hover);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-block:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.btn-unblock {
+  border-color: var(--success-border);
+  background: var(--success-light);
+  color: var(--primary-hover);
+}
+
+.btn-unblock:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .admin-container {
+    padding: 16px;
+  }
+
+  .admin-table thead th,
+  .admin-table tbody td {
+    padding: 10px 12px;
+  }
+}

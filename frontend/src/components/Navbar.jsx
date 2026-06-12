@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogoIcon, TodoIcon, PostIcon, AlbumIcon, UserIcon, LogoutIcon } from './Icons';
+import { LogoIcon, TodoIcon, PostIcon, AlbumIcon, UserIcon, LogoutIcon, AdminIcon } from './Icons';
 import './Navbar.css';
 
 // Added setCurrentUser to the props destructuring to update header layout live
@@ -102,6 +102,12 @@ function Navbar({ currentUser, onLogout, setCurrentUser }) {
                   <AlbumIcon size={18} className="nav-icon" />
                   <span>Albums</span>
                 </Link>
+                {currentUser.is_admin ? (
+                  <Link to="/admin/dashboard" className="nav-link nav-link-admin">
+                    <AdminIcon size={18} className="nav-icon" />
+                    <span>Admin Dashboard</span>
+                  </Link>
+                ) : null}
               </div>
               <div className="navbar-user">
                 <div 

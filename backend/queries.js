@@ -5,7 +5,7 @@ const db = require('./db');
 // ==========================================
 async function verifyLogin(username, password) {
     const [rows] = await db.query(
-        `SELECT u.id, u.name, u.username, u.email 
+        `SELECT u.id, u.name, u.username, u.email, u.is_admin, u.is_blocked
          FROM users u 
          JOIN passwords p ON u.id = p.user_id 
          WHERE u.username = ? AND p.password_hash = ?`,
@@ -72,6 +72,24 @@ async function updateUser(id, name, username, email, password) {
 
 async function deleteUser(id) {
     const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+    return result.affectedRows > 0;
+}
+
+// ==========================================
+// Admin Functions
+// ==========================================
+async function getAllUsersForAdmin() {
+    const [users] = await db.query(
+        'SELECT id, name, username, email, is_admin, is_blocked FROM users ORDER BY id ASC'
+    );
+    return users;
+}
+
+async function toggleUserBlockStatus(userId, isBlocked) {
+    const [result] = await db.query(
+        'UPDATE users SET is_blocked = ? WHERE id = ?',
+        [isBlocked ? 1 : 0, userId]
+    );
     return result.affectedRows > 0;
 }
 
@@ -201,7 +219,8 @@ async function getAllPosts() {
 async function getPostsByUserId(userId, filters = {}) {
     let sql = `
         SELECT p.*, u.name AS authorName, u.email AS authorEmail
-        FROM posts p        
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
         WHERE p.user_id = ?`;
     const params = [userId];
 
@@ -285,6 +304,7 @@ async function deleteComment(id) {
 module.exports = {
     verifyLogin, registerUser,
     getAllUsers, getUserById, createUser, updateUser, deleteUser,
+    getAllUsersForAdmin, toggleUserBlockStatus,
     getAlbumsByUserId, getAlbumById, createAlbum, updateAlbum, deleteAlbum,
     getPhotosByAlbumId, getPhotoById, createPhoto, updatePhoto, deletePhoto,
     getAllTodos, getTodosByUserId, getTodoById, createTodo, updateTodo, deleteTodo,
