@@ -181,10 +181,10 @@
   color: var(--primary-hover);
 }
 
-/* Double Column Widget Panel */
+/* Three Column Widget Panel (Updated to 3 columns) */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr); /* שונה מ-1fr 1fr כדי להכיל את האלבומים בסימטריה מושלמת */
   gap: 24px;
 }
 
@@ -387,51 +387,35 @@
   line-height: 1.5;
 }
 
-/* Quick Actions Widget */
-.quick-actions-widget {
-  background-color: var(--card-bg);
-  border: 1px solid rgba(16, 185, 129, 0.1);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-}
-
-.quick-actions-title {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-h);
-}
-
-.quick-actions-buttons {
+/* Widget Albums List (New Section) */
+.widget-albums-list {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.quick-action-btn {
-  flex: 1;
-  min-width: 200px;
-  background-color: var(--primary-light);
-  border: 1px solid rgba(16, 185, 129, 0.15);
-  color: var(--primary-hover);
-  text-decoration: none;
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 14px;
+.widget-album-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  text-decoration: none; /* מבטל את קו הקישור התחתון */
   transition: all 0.2s ease;
 }
 
-.quick-action-btn:hover {
-  background-color: var(--primary);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+.widget-album-item:hover {
+  border-color: var(--border-green);
+  transform: translateX(2px);
+}
+
+.widget-album-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
 }
 
 /* Loading & Spinner (Aligned with pages) */
@@ -479,6 +463,6 @@
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* קורס אוטומטית לעמודה אחת במסכים קטנים */
   }
 }

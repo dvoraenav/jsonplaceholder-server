@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { TodoIcon, PostIcon, UserIcon, PlusIcon, ChevronRightIcon, EmptyIcon } from '../components/Icons';
+import { TodoIcon, PostIcon, UserIcon, PlusIcon, ChevronRightIcon, EmptyIcon, AlbumIcon } from '../components/Icons'; // Added AlbumIcon
 import { fetchWithCache, updateCacheItem } from '../utils/apiCache';
 import './Home.css';
 
@@ -8,12 +8,14 @@ function Home({ currentUser }) {
   const navigate = useNavigate();
   const [todos, setTodos] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [albums, setAlbums] = useState([]); // Added albums state hook
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Cache keys (identical to the Todos/Posts pages so they share entries)
+  // Cache keys (identical to the original endpoints to leverage shared data)
   const todosUrl = `http://localhost:3000/api/users/${currentUser.id}/todos`;
   const postsUrl = `http://localhost:3000/api/users/${currentUser.id}/posts`;
+  const albumsUrl = `http://localhost:3000/api/users/${currentUser.id}/albums`; // Added albums cache url
 
   useEffect(() => {
     fetchDashboardData();
@@ -22,13 +24,16 @@ function Home({ currentUser }) {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [todosData, postsData] = await Promise.all([
+      // Added albums fetching in parallel with existing promises to optimize performance
+      const [todosData, postsData, albumsData] = await Promise.all([
         fetchWithCache(todosUrl),
-        fetchWithCache(postsUrl)
+        fetchWithCache(postsUrl),
+        fetchWithCache(albumsUrl)
       ]);
 
       setTodos(todosData);
       setPosts(postsData);
+      setAlbums(albumsData); // Hydrate albums state
       setError('');
     } catch (err) {
       console.error(err);
@@ -79,6 +84,8 @@ function Home({ currentUser }) {
   const recentPendingTodos = todos.filter(t => !t.completed).slice(0, 4);
   // Get top 2 posts to show in the widget
   const recentPosts = posts.slice(0, 2);
+  // Get top 3 albums to show in the widget
+  const recentAlbums = albums.slice(0, 3);
 
   if (loading) {
     return (
@@ -111,6 +118,7 @@ function Home({ currentUser }) {
 
       {/* Metrics Row Widget Grid */}
       <div className="metrics-row">
+        {/* Tasks Card */}
         <div className="metric-card">
           <div className="metric-header">
             <span className="metric-title">Tasks Checklist</span>
@@ -127,6 +135,7 @@ function Home({ currentUser }) {
           </div>
         </div>
 
+        {/* Posts Card */}
         <div className="metric-card">
           <div className="metric-header">
             <span className="metric-title">Shared Thoughts</span>
@@ -143,9 +152,27 @@ function Home({ currentUser }) {
             </Link>
           </div>
         </div>
+
+        {/* Added: Albums Metrics Card */}
+        <div className="metric-card">
+          <div className="metric-header">
+            <span className="metric-title">My Galleries</span>
+            <div className="metric-icon-container">
+              <AlbumIcon size={20} />
+            </div>
+          </div>
+          <div className="metric-body">
+            <span className="metric-value">{albums.length}</span>
+            <span className="metric-label">Total Saved Albums</span>
+            <Link to={`/users/${currentUser.username}/albums`} className="metric-link">
+              <span>Open Albums</span>
+              <ChevronRightIcon size={14} />
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Two Column Widget Panel */}
+      {/* Three Column Widget Panel Grid Layout */}
       <div className="dashboard-grid">
         {/* Recent Pending Tasks Widget */}
         <div className="dashboard-widget-card">
@@ -218,20 +245,41 @@ function Home({ currentUser }) {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Quick Action Shortcuts Widget */}
-      <div className="quick-actions-widget">
-        <h3 className="quick-actions-title">Quick Actions</h3>
-        <div className="quick-actions-buttons">
-          <Link to={`/users/${currentUser.username}/todos`} className="quick-action-btn">
-            <PlusIcon size={16} />
-            <span>Create New Task</span>
-          </Link>
-          <Link to={`/users/${currentUser.username}/posts`} className="quick-action-btn">
-            <PlusIcon size={16} />
-            <span>Write New Post</span>
-          </Link>
+        {/* Added: Recent Albums Custom Widget Card */}
+        <div className="dashboard-widget-card">
+          <div className="widget-header">
+            <h3>Recent Albums</h3>
+            <Link to={`/users/${currentUser.username}/albums`} className="widget-header-link">
+              <span>View Albums</span>
+              <ChevronRightIcon size={14} />
+            </Link>
+          </div>
+                <div className="widget-body">
+          {recentAlbums.length === 0 ? (
+            <div className="widget-empty-state">
+              <EmptyIcon size={36} className="widget-empty-icon" />
+              <p>No albums created yet</p>
+            </div>
+          ) : (
+            <div className="widget-albums-list">
+              {recentAlbums.map(album => (
+                <Link 
+                  to={`/users/${currentUser.username}/albums`} 
+                  key={album.id} 
+                  className="widget-album-item"
+                >
+                  <div className="widget-album-row">
+                    <span className="album-folder-emoji" style={{ fontSize: '18px' }}>📂</span>
+                    <span className="widget-album-title" style={{ fontWeight: 600, fontSize: '14px', color: '#2d3748' }}>
+                      {album.title}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         </div>
       </div>
     </div>
