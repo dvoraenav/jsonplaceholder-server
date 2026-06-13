@@ -184,7 +184,7 @@
 /* Three Column Widget Panel (Updated to 3 columns) */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* שונה מ-1fr 1fr כדי להכיל את האלבומים בסימטריה מושלמת */
+  grid-template-columns: repeat(3, 1fr); 
   gap: 24px;
 }
 
@@ -402,7 +402,7 @@
   background-color: var(--bg);
   border-radius: 10px;
   border: 1px solid var(--border);
-  text-decoration: none; /* מבטל את קו הקישור התחתון */
+  text-decoration: none; 
   transition: all 0.2s ease;
 }
 
@@ -463,6 +463,6 @@
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr; /* קורס אוטומטית לעמודה אחת במסכים קטנים */
+    grid-template-columns: 1fr; 
   }
 }
