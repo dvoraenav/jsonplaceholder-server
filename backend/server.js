@@ -85,18 +85,6 @@ app.get('/api/users/:id', async (req, res) => {
     }
 });
 
-app.post('/api/users', async (req, res) => {
-    try {
-        const { name, username, email } = req.body;
-        if (!name || !username || !email) return res.status(400).json({ error: 'Missing fields' });
-
-        const newUser = await queries.createUser(name, username, email);
-        res.status(201).json(newUser);
-    } catch (error) {
-        res.status(500).json({ error: 'Error creating user' });
-    }
-});
-
 app.put('/api/users/:id', async (req, res) => {
     try {
         
@@ -107,7 +95,7 @@ app.put('/api/users/:id', async (req, res) => {
         if (!success) return res.status(404).json({ error: 'User not found' });
         res.json({ message: 'User updated successfully' });
     } catch (error) {
-        console.error("❌ שגיאה בעדכון משתמש:", error);
+        console.error("Error updating user:", error);
         res.status(500).json({ error: 'Error updating user' });
     }
 });
@@ -385,7 +373,7 @@ app.get('/api/users/:userId/posts', async (req, res) => {
         const posts = await queries.getPostsByUserId(req.params.userId, { q, limit });
         res.json(posts);
     } catch (error) {
-        console.error("❌ Error fetching user posts:", error);
+        console.error("Error fetching user posts:", error);
         res.status(500).json({ error: 'Error fetching posts' });
     }
 });
@@ -454,7 +442,7 @@ app.delete('/api/posts/:id', async (req, res) => {
         const success = await queries.deletePost(req.params.id);
         res.json({ message: 'Post deleted successfully' });
     } catch (error) {
-        console.error("❌ שגיאה במחיקת פוסט:", error);
+        console.error("Error deleting post:", error);
         res.status(500).json({ error: 'Error deleting post' });
     }
 });
@@ -515,7 +503,7 @@ app.delete('/api/comments/:id', async (req, res) => {
         const success = await queries.deleteComment(req.params.id);
         res.json({ message: 'Comment deleted successfully' });
     } catch (error) {
-        console.error("❌ השרת התרסק במחיקה בגלל:", error);
+        console.error("Error deleting comment:", error);
         res.status(500).json({ error: 'Error deleting comment' });
     }
 });
